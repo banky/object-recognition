@@ -3,16 +3,15 @@
 /*
  * Downloads an image specified by the url to a file
  */
-void downloadImage(std::string url, unsigned id) {
+char * downloadImage(std::string url, unsigned id, std::string path) {
 	CURL *image; 
 	CURLcode imgResult; 
 	FILE *fp = NULL; 
+    char * filename = NULL;
 
 	image = curl_easy_init(); 
-	if(image){ 
-	    // Open file
-	    char * filename;
-	    sprintf(filename, "../images/img%u.jpg", id);
+	if(image) {
+	    sprintf(filename, "../%s/img%u.jpg", path.c_str(), id);
 	    fp = fopen(filename, "w"); 
 	    if(fp == NULL) {
 	    	std::cout << "File cannot be opened\n";
@@ -24,11 +23,11 @@ void downloadImage(std::string url, unsigned id) {
 	    curl_easy_setopt(image, CURLOPT_WRITEDATA, fp); 
 
 	    // Grab image 
-	    imgResult = curl_easy_perform(image); 
+        imgResult = curl_easy_perform(image); 
 	    if(imgResult){ 
 	        std::cout << "Cannot grab the image! Error code : " << imgResult << "\n"; 
 	    }
-	} 
+	}
 
 	// Clean up the resources 
 	curl_easy_cleanup(image); 
@@ -36,12 +35,14 @@ void downloadImage(std::string url, unsigned id) {
 	if (fp) {
 		fclose(fp);
 	}
+
+    return filename;
 }
 
 /*
  * Resamples a specified image file to the provided dimensions
  */
-bool resampleImage(std::string filename, unsigned w, unsigned h, Mat & destImage) {
+bool resampleImage(std::string filename, unsigned w, unsigned h, cv::Mat & destImage) {
 	cv::Mat srcImage = cv::imread(filename, cv::IMREAD_COLOR);
 
 	if (srcImage.empty()) {
@@ -50,7 +51,6 @@ bool resampleImage(std::string filename, unsigned w, unsigned h, Mat & destImage
 	}
 
 	cv::Size size(w,h);
-	cv::Mat destImage;
 	cv::resize(srcImage, destImage, size);
 	
     return true;
@@ -61,6 +61,6 @@ bool resampleImage(std::string filename, unsigned w, unsigned h, Mat & destImage
  */
 void displayImage(cv::Mat img) {
 	cv::namedWindow("Display window", cv::WINDOW_AUTOSIZE);
-    cv::imshow( "Display window", destImage );
+    cv::imshow("Display window", img);
     cv::waitKey(0);
 }

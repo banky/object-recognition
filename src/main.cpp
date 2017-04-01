@@ -3,9 +3,13 @@
 
 #include <iostream>
 
+#define WIDTH = 100;
+#define HEIGHT = 100;
+
 std::string VALIDATION_FILE = "../data/validation/images.csv";
 std::string TRAINING_FILE = "../data/train/images.csv";
 std::string TEST_FILE = "../data/test/images.csv";
+
 
 int main() {
 
@@ -20,15 +24,18 @@ int main() {
 
     unsigned imageId = 0;
     file >> row;
-    //while(file >> row)
-    //{
-    	downloadImage(row[2], imageId);
+    while(file >> row)
+    {
+    	char * filename = downloadImage(row[2], imageId, "../images");
 
-    	resampleImage("../images/img0.jpg", 100, 100);
+    	// Resample image to a smaller size
+    	cv::Mat destImage;
+    	resampleImage(filename, WIDTH, HEIGHT, destImage);
 
+    	
     	//imageId++;
 
 
         //cout << "4th Element(" << row[2] << ")\n";
-    //} 
+    } 
 }

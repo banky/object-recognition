@@ -5,5 +5,6 @@
 #include "opencv2/imgproc/imgproc.hpp"
 #include <opencv2/highgui.hpp>
 
-void downloadImage(std::string, unsigned id);
-bool resampleImage(std::string filename, unsigned w, unsigned h);
+char * downloadImage(std::string, unsigned id, std::string path);
+bool resampleImage(std::string filename, unsigned w, unsigned h, cv::Mat & destImage);
+void displayImage(cv::Mat img);
