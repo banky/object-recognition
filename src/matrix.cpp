@@ -1,38 +1,52 @@
+#include "matrix.h"
+
 using namespace std;
 
-Matrix() {
-	this.numRows = numRows_;
-	this.numCols = numCols_;
+Matrix::Matrix() {
+	this->numRows = 0;
+	this->numCols = 0;
 
-	this.data = 
-		vector< vector<float> > float(numRows_, vector<float>(numCols_));
+	this->data = std::vector< std::vector<float> > (0, 
+				std::vector<float>(0, 0));
 }
 
-Matrix(float * values, unsigned numRows_, unsigned numCols_) {
-	this.numRows = numRows_;
-	this.numCols = numCols_;
+Matrix::Matrix(float value, unsigned numRows_, unsigned numCols_) {
+	this->numRows = numRows_;
+	this->numCols = numCols_;
 
-	this.data = 
-		vector< vector<float> > float(numRows_, vector<float>(numCols_));
+	this->data = 
+		vector< vector<float> > (numRows_, vector<float>(numCols_));
 
-	if (values != NULL) {
-		for (unsigned i = 0; i < numRows_; i++) {
-			for (unsigned j = 0; j < numCols_; j++) {
-				this.data[i][j] = values[i][j];
-			}
+	for (unsigned i = 0; i < numRows_; i++) {
+		for (unsigned j = 0; j < numCols_; j++) {
+			this->data[i][j] = value;
 		}
 	}
 }
 
-Matrix multiply(Matrix b) {
-	Matrix res(NULL, this.numRows, b.numCols);
+Matrix::Matrix(tbt values, unsigned numRows_, unsigned numCols_) {
+	this->numRows = numRows_;
+	this->numCols = numCols_;
+
+	this->data = 
+		vector< vector<float> > (numRows_, vector<float>(numCols_));
+
+	for (unsigned i = 0; i < numRows_; i++) {
+		for (unsigned j = 0; j < numCols_; j++) {
+			this->data[i][j] = values[i][j];
+		}
+	}
+}
+
+Matrix Matrix::multiply(Matrix b) {
+	Matrix res(0, this->numRows, b.numCols);
 
 	// Matrices cannot be multiplied
-	if (this.numCols == b.numRows) {
-		for (unsigned i = 0; i < this.numRows; i++) {
+	if (this->numCols == b.numRows) {
+		for (unsigned i = 0; i < this->numRows; i++) {
 			for (unsigned j = 0; j < b.numCols; j++) {
-				for (unsigned k = 0; k < this.numCols; k++) {
-					res.data[i][j] = this.data[i][k]*b.data[k][j];
+				for (unsigned k = 0; k < this->numCols; k++) {
+					res.data[i][j] = this->data[i][k]*b.data[k][j];
 				}
 			}
 		}
@@ -41,27 +55,27 @@ Matrix multiply(Matrix b) {
 	return res;
 }
 
-Matrix transpose() {
-	Matrix res(NULL, this.numCols, this.numRows);
+Matrix Matrix::transpose() {
+	Matrix res(0, this->numCols, this->numRows);
 
-	for (unsigned i = 0; i < this.numRows; i++) {
-		for (unsigned j = 0; j < this.numCols; j++) {
-			res.data[j][i] = this.data[i][j];
+	for (unsigned i = 0; i < this->numRows; i++) {
+		for (unsigned j = 0; j < this->numCols; j++) {
+			res.data[j][i] = this->data[i][j];
 		}
 	}
 
 	return res;
 }
 
-Matrix addOnesRow() {
-	Matrix res(NULL, this.numRows + 1, this.numCols);
+Matrix Matrix::addOnesRow() {
+	Matrix res(0, this->numRows + 1, this->numCols);
 
-	for (unsigned i = 0; i <= this.numRows; i++) {
-		for (unsigned j = 0; j < this.numCols; j++) {
-			if (i = 0) {
+	for (unsigned i = 0; i <= this->numRows; i++) {
+		for (unsigned j = 0; j < this->numCols; j++) {
+			if (i == 0) {
 				res.data[i][j] = 1;
 			} else {
-				res.data[i][j] = this.data[i - 1][j];
+				res.data[i][j] = this->data[i - 1][j];
 			}
 		}
 	}
@@ -69,15 +83,15 @@ Matrix addOnesRow() {
 	return res;
 }
 
-Matrix addOnesCol() {
-	Matrix res(NULL, this.numRows, this.numCols + 1);
+Matrix Matrix::addOnesCol() {
+	Matrix res(0, this->numRows, this->numCols + 1);
 
-	for (unsigned i = 0; i < this.numRows; i++) {
-		for (unsigned j = 0; j <= this.numCols; j++) {
-			if (j = 0) {
+	for (unsigned i = 0; i < this->numRows; i++) {
+		for (unsigned j = 0; j <= this->numCols; j++) {
+			if (j == 0) {
 				res.data[i][j] = 1;
 			} else {
-				res.data[i][j] = this.data[i][j - 1];
+				res.data[i][j] = this->data[i][j - 1];
 			}
 		}
 	}
@@ -85,31 +99,31 @@ Matrix addOnesCol() {
 	return res;
 }
 
-Matrix getRow(unsigned row) {
-	Matrix res(NULL, 1, this.numCols);
+Matrix Matrix::getRow(unsigned row) {
+	Matrix res(0, 1, this->numCols);
 
-	for (unsigned j = 0; j < this.numCols; j++) {
-		res.data[j] = this.data[row][j];
+	for (unsigned j = 0; j < this->numCols; j++) {
+		res.data[row][j] = this->data[row][j];
 	}
 
 	return res;
 }
 
-Matrix getCol(unsigned col) {
-	Matrix res(NULL, this.numRows, 1);
+Matrix Matrix::getCol(unsigned col) {
+	Matrix res(0, this->numRows, 1);
 
-	for (unsigned i = 0; i < this.numRows; i++) {
-		res.data[i] = this.data[i][col];
+	for (unsigned i = 0; i < this->numRows; i++) {
+		res.data[i][col] = this->data[i][col];
 	}
 
 	return res;
 }
 
-Matrix& operator+=(const Matrix& rhs) {
-	if (this.numRows == rhs.numRows && this.numCols == rhs.numCols) {
-		for (unsigned i = 0; i < this.numRows; i++) {
-			for (unsigned j = 0; j < this.numCols; j++) {
-				this.data[i][j] = this.data[i][j] + rhs.data[i][j];
+Matrix& Matrix::operator+=(const Matrix& rhs) {
+	if (this->numRows == rhs.numRows && this->numCols == rhs.numCols) {
+		for (unsigned i = 0; i < this->numRows; i++) {
+			for (unsigned j = 0; j < this->numCols; j++) {
+				this->data[i][j] = this->data[i][j] + rhs.data[i][j];
 			}
 		}
 	}
@@ -117,11 +131,11 @@ Matrix& operator+=(const Matrix& rhs) {
 	return *this;
 }
 
-Matrix& operator-=(const Matrix& rhs) {
-	if (this.numRows == rhs.numRows && this.numCols == rhs.numCols) {
-		for (unsigned i = 0; i < this.numRows; i++) {
-			for (unsigned j = 0; j < this.numCols; j++) {
-				this.data[i][j] = this.data[i][j] - rhs.data[i][j];
+Matrix& Matrix::operator-=(const Matrix& rhs) {
+	if (this->numRows == rhs.numRows && this->numCols == rhs.numCols) {
+		for (unsigned i = 0; i < this->numRows; i++) {
+			for (unsigned j = 0; j < this->numCols; j++) {
+				this->data[i][j] = this->data[i][j] - rhs.data[i][j];
 			}
 		}
 	}
@@ -129,27 +143,58 @@ Matrix& operator-=(const Matrix& rhs) {
 	return *this;
 }
 
-Matrix& operator-=(const Matrix& rhs) {
-	this = this.multiply(rhs);
+Matrix& Matrix::operator*=(const Matrix& rhs) {
+	Matrix a = *this;
+	//*this = Matrix(0, this->numRows, )
+	//Matrix res = a.multiply(rhs);
+	//(*this) = a;
+	//res.print();
+	(*this) = a.multiply(rhs);
+	return *this;//(*this).multiply(rhs);
+}
+
+Matrix& Matrix::operator=(Matrix rhs)
+{
+	// Delete the lhs Matrix
+	//delete this;
+	//this = new Matrix(0, rhs.numRows, rhs.numCols);
+	this->numRows = rhs.numRows;
+	this->numCols = rhs.numCols;
+	this->data = rhs.data;
+
+	// for (unsigned i = 0; i < this->numRows; i++) {
+	// 	for (unsigned j = 0; j < this->numCols; j++) {
+	// 		this->data[i][j] = rhs.data[i][j];
+	// 	}
+	// }
 
 	return *this;
 }
 
-inline Matrix operator+(Matrix lhs, const Matrix& rhs) {
+Matrix operator+(Matrix lhs, const Matrix& rhs) {
 	lhs += rhs;
 	return lhs;
 }
 
-inline Matrix operator-(Matrix lhs, const Matrix& rhs) {
+Matrix operator-(Matrix lhs, const Matrix& rhs) {
 	lhs -= rhs;
 	return lhs;
 }
 
-inline Matrix operator*(Matrix lhs, const Matrix& rhs) {
+Matrix operator*(Matrix lhs, const Matrix& rhs) {
 	lhs *= rhs;
 	return lhs;
 }
 
-
+void Matrix::print() {
+	std::cout << "[";
+	for (unsigned i = 0; i < this->numRows; i++) {
+		for (unsigned j = 0; j < this->numCols; j++) {
+			std::cout << " " << this->data[i][j] << ",";
+		}
+		std::cout << "\n";
+	}
+	std::cout << "]";
+}
 
 
