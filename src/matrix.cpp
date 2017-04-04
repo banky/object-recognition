@@ -10,6 +10,18 @@ Matrix::Matrix() {
 				std::vector<float>(0, 0));
 }
 
+Matrix::Matrix(unsigned rowIdx, unsigned colIdx, unsigned numRows_, 
+	unsigned numCols_) {
+
+	this->numRows = numRows_;
+	this->numCols = numCols_;
+	this->data = 
+		vector< vector<float> > (numRows_, vector<float>(numCols_, 0));
+
+	this->data[rowIdx][colIdx] = 1;
+}
+
+
 Matrix::Matrix(float value, unsigned numRows_, unsigned numCols_) {
 	this->numRows = numRows_;
 	this->numCols = numCols_;
@@ -50,6 +62,25 @@ Matrix Matrix::multiply(Matrix b) {
 				}
 			}
 		}
+	} else {
+		cout << "Matrix multiplication failed. Size mismatch\n";
+		exit(1);
+	}
+
+	return res;
+}
+
+Matrix Matrix::elementMultiply(Matrix b) {
+	Matrix res(0, this->numRows, this->numCols);
+
+	if (this->numRows == b.numRows && this->numCols == b.numCols) {
+		for (unsigned i = 0; i < this->numRows; i++) {
+			for (unsigned j = 0; j < this->numCols; j++) {
+				res.data[i][j] = this->data[i][j] * b.data[i][j];
+			}
+		}
+	} else {
+		cout << "Element wise multiplication failed. Size mismatch\n";
 	}
 
 	return res;
@@ -99,6 +130,18 @@ Matrix Matrix::addOnesCol() {
 	return res;
 }
 
+void Matrix::removeRow(unsigned row) {
+	this->data.erase(this->data.begin() + row);
+	this->numRows--;
+}
+
+void Matrix::removeCol(unsigned col) {
+	for (unsigned i = 0; i < this->numRows; i++) {
+		this->data[i].erase(this->data[i].begin() + col);
+	}
+	this->numCols--;
+}
+
 Matrix Matrix::getRow(unsigned row) {
 	Matrix res(0, 1, this->numCols);
 
@@ -119,6 +162,44 @@ Matrix Matrix::getCol(unsigned col) {
 	return res;
 }
 
+Matrix Matrix::compare(Matrix b) {
+	Matrix res(0, this->numRows, this->numCols);
+
+	if(this->numRows == b.numRows && this->numCols == b.numCols) {
+		for (unsigned i = 0; i < this->numRows; i++) {
+			for (unsigned j = 0; j < this->numCols; j++) {
+				res.data[i][j] = this->data[i][j] == b.data[i][j];
+			}
+		}
+	} else {
+		std::cout << "Cannot compare matrices. Size mismatch\n";
+		exit(1);
+	}
+
+	return res;
+
+}
+
+float Matrix::toFloat() {
+	if (this->numRows == 1 && this->numCols == 1) {
+		return this->data[0][0];
+	} else {
+		cout << "Cannot convert multidimensional matrix to float";
+		exit(1);
+	}
+}
+
+void Matrix::print() {
+	std::cout << "[";
+	for (unsigned i = 0; i < this->numRows; i++) {
+		for (unsigned j = 0; j < this->numCols; j++) {
+			std::cout << " " << this->data[i][j] << ",";
+		}
+		std::cout << "\n";
+	}
+	std::cout << "]";
+}
+
 Matrix& Matrix::operator+=(const Matrix& rhs) {
 	if (this->numRows == rhs.numRows && this->numCols == rhs.numCols) {
 		for (unsigned i = 0; i < this->numRows; i++) {
@@ -126,6 +207,9 @@ Matrix& Matrix::operator+=(const Matrix& rhs) {
 				this->data[i][j] = this->data[i][j] + rhs.data[i][j];
 			}
 		}
+	} else {
+		std::cout << "Matrix addition failed. Size mismatch\n";
+		exit(1);
 	}
 
 	return *this;
@@ -138,6 +222,9 @@ Matrix& Matrix::operator-=(const Matrix& rhs) {
 				this->data[i][j] = this->data[i][j] - rhs.data[i][j];
 			}
 		}
+	} else {
+		std::cout << "Matrix subtraction failed. Size mismatch\n";
+		exit(1);
 	}
 
 	return *this;
@@ -145,28 +232,15 @@ Matrix& Matrix::operator-=(const Matrix& rhs) {
 
 Matrix& Matrix::operator*=(const Matrix& rhs) {
 	Matrix a = *this;
-	//*this = Matrix(0, this->numRows, )
-	//Matrix res = a.multiply(rhs);
-	//(*this) = a;
-	//res.print();
 	(*this) = a.multiply(rhs);
-	return *this;//(*this).multiply(rhs);
+	return *this;
 }
 
 Matrix& Matrix::operator=(Matrix rhs)
 {
-	// Delete the lhs Matrix
-	//delete this;
-	//this = new Matrix(0, rhs.numRows, rhs.numCols);
 	this->numRows = rhs.numRows;
 	this->numCols = rhs.numCols;
 	this->data = rhs.data;
-
-	// for (unsigned i = 0; i < this->numRows; i++) {
-	// 	for (unsigned j = 0; j < this->numCols; j++) {
-	// 		this->data[i][j] = rhs.data[i][j];
-	// 	}
-	// }
 
 	return *this;
 }
@@ -185,16 +259,3 @@ Matrix operator*(Matrix lhs, const Matrix& rhs) {
 	lhs *= rhs;
 	return lhs;
 }
-
-void Matrix::print() {
-	std::cout << "[";
-	for (unsigned i = 0; i < this->numRows; i++) {
-		for (unsigned j = 0; j < this->numCols; j++) {
-			std::cout << " " << this->data[i][j] << ",";
-		}
-		std::cout << "\n";
-	}
-	std::cout << "]";
-}
-
-
