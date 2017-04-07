@@ -1,5 +1,7 @@
 #include <vector>
 #include <iostream>
+#include <math.h>
+#include <stdio.h>
 
 typedef std::vector< std::vector<float> > tbt; // Two dimensional matrix
 
@@ -28,6 +30,8 @@ class Matrix {
 		Matrix getRow(unsigned row);
 		Matrix getCol(unsigned col);
 		Matrix compare(Matrix b);
+
+		float sum();
 		float toFloat();
 		void print();
 		

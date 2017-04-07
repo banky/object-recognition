@@ -1,5 +1,8 @@
 #include "train.h"
 
+#define CONVERGENCE_LIMIT 0.1
+
+using namespace std;
 /*
  * Computes the sigmoid for a given matrix
  */
@@ -38,53 +41,59 @@ Matrix mLog(Matrix a) {
 std::vector<Matrix> forwardProp(Matrix x, std::vector<Matrix> theta,
 	unsigned numLayers) {
 
-	std::vector<Matrix> a (numLayers);
+	// Add one to include the input layer. Can optimize by removing this layer?
+	std::vector<Matrix> a (numLayers + 1);
 	Matrix tmp = Matrix();
+
+	a[0] = x;
 	
 	// numLayers does not include input layer
 	for (unsigned i = 0; i < numLayers; i++) {
-		if (i == 0) {
-			tmp = x.addOnesRow();
-			tmp = theta[i]*tmp;
-			tmp = sigmoid(tmp);
-			a[i] = x;
-		} else {
-			tmp = tmp.addOnesRow();
-			tmp = theta[i]*tmp;
-			tmp = sigmoid(tmp);
-			tmp.removeRow(0);
-			a[i] = tmp;
-		}
+		tmp = a[i].addOnesRow();
+		tmp = theta[i]*tmp;
+		tmp = sigmoid(tmp);
+		a[i + 1] = tmp;
 	}
 
 	return a;
 }
 
 std::vector<Matrix> backProp(unsigned numLayers, unsigned m, Matrix x,
-	std::vector<Matrix> theta, Matrix y, unsigned numOutNodes, Matrix tags, float lambda) {
+	std::vector<Matrix> theta, Matrix y, Matrix tags, float lambda) {
 
-	std::vector<Matrix> Del (numLayers - 1);
-	std::vector<Matrix> a (numLayers);
-	std::vector<Matrix> thetaGrad (numLayers - 1);
+	std::vector<Matrix> Del (numLayers);
+	std::vector<Matrix> a (numLayers + 1);	// Add 1 to include training example layer
+	std::vector<Matrix> thetaGrad (numLayers);
+	unsigned numOutNodes = tags.numRows;
+
+	// Initialize thetaGrad to zeroes
+	for (unsigned i = 0; i < numLayers; i++) {
+		thetaGrad[i] = Matrix(0, theta[i].numRows, theta[i].numCols);
+	}
 
 	for (unsigned i = 0; i < m; i++) {
 		Matrix input = x.getRow(i).transpose();
+
 		a = forwardProp(input, theta, numLayers);
-		
+
 		Matrix currY = Matrix(y.data[i][0], numOutNodes, 1);
 		currY = currY.compare(tags);
 
 		std::vector<Matrix> diff(numLayers);
-		diff[numLayers - 1] = a[numLayers - 1] - currY;
-		for (unsigned layer = numLayers - 2; layer >= 1; layer--) {
-			diff[layer] = theta[layer].transpose()*diff[layer+1];
-			diff[layer] = diff[layer].elementMultiply(sigmoidGradient(a[layer]));
-		}
+		diff[numLayers - 1] = a[numLayers] - currY;
 
+		for (int layer = numLayers - 2; layer >= 0; layer--) {
+			Matrix z = theta[layer]*(a[layer].addOnesRow());
+			diff[layer] = theta[layer+1].transpose()*diff[layer+1];
+			diff[layer] = diff[layer].elementMultiply(sigmoidGradient(z).addOnesRow());
+		}
+			
 		for (unsigned layer = 0; layer < numLayers - 1; layer++) {
-			Del[layer] += a[layer]*(diff[layer + 1].transpose());
+			Del[layer] += a[layer]*(diff[layer].transpose());
 		}
 	}
+
+	cout << "Hit 10\n";
 
 	for (unsigned layer = 0; layer < numLayers - 1; layer++) {
 		unsigned thetaNumRows = theta[layer].numRows;
@@ -94,11 +103,16 @@ std::vector<Matrix> backProp(unsigned numLayers, unsigned m, Matrix x,
  		for (unsigned i = 0; i < thetaNumRows; i++) {
 			for (unsigned j = 0; j < thetaNumCols; j++) {
 				if (j == 0) {
+					std::cout << "Hit 11\n";
+					Del[0].print();
+					Del[1].print();
 					thetaGrad[layer].data[i][j] = (Del[layer].data[i][j])/m;
 				} else {
+					std::cout << "Hit 12\n";
 					thetaGrad[layer].data[i][j] = (Del[layer].data[i][j])/m;
 					thetaGrad[layer].data[i][j] += lambda * theta[layer].data[i][j];
 				}
+				std::cout << "Hit 13\n";
 			}
 		}
 	}
@@ -107,9 +121,10 @@ std::vector<Matrix> backProp(unsigned numLayers, unsigned m, Matrix x,
 }
 
 float cost(Matrix x, Matrix y, std::vector<Matrix> theta, Matrix tags, 
-	float lambda, unsigned m, unsigned numOutNodes, unsigned numLayers) {
+	float lambda, unsigned m, unsigned numLayers) {
 
 	float cost = 0;
+	unsigned numOutNodes = tags.numRows;
 	Matrix ones(1, numOutNodes, 1);
 
 	// Cost
@@ -153,17 +168,55 @@ std::vector<Matrix> randomInit(unsigned numLayers, std::vector<unsigned> numel) 
 	unsigned e = 1;
 	// All theta values are between e and -e
 
+	// numel has one element per group of nodes
+	if (numLayers != numel.size() - 1) {
+		std::cout << "Incorrect number of elements for number" 
+				  <<" of layers on random initializtion. \n";
+		exit(1);
+	}
+
 	for (unsigned layer = 0; layer < numLayers; layer++) {
 		unsigned numRows = numel[layer + 1];
 		unsigned numCols = numel[layer] + 1;
 		theta[layer] = Matrix(0, numRows, numCols);
 		for (unsigned i = 0; i < numRows; i++) {
 			for (unsigned j = 0; j < numCols; j++) {
-				theta[layer].data[i][j] = (2 * e * rand())/RAND_MAX - e;
+				theta[layer].data[i][j] = (2 * e * (float)rand())/RAND_MAX - e;
 			}
 		}
 	}
- 
+
  	return theta;
 }
 
+bool checkConvergence(std::vector<Matrix> a, std::vector<Matrix> b, unsigned numLayers, 
+	float limit) {
+	for (unsigned layer = 0; layer < numLayers; layer++) {
+		if (fabs(a[layer].sum() - b[layer].sum()) >= limit) {
+			return false;
+		}
+	}
+	return true;
+}
+
+std::vector<Matrix> gradientDescent(std::vector<Matrix> theta, unsigned m, unsigned numLayers, 
+	float alpha, Matrix x, Matrix y, Matrix tags, float lambda) {
+
+	std::vector<Matrix> pastTheta = theta;
+	do {
+		std::cout << "Hit 1\n";
+		std::vector<Matrix> grad = backProp(numLayers, m, x, theta, y, tags, lambda);
+		pastTheta = theta;
+		std::cout << "Hit 2\n";
+
+		for (unsigned layer = 0; layer < numLayers; layer++) {
+			float coeff = alpha/m;
+			Matrix coeffMat = Matrix(coeff, theta[layer].numRows, theta[layer].numCols);
+			theta[layer] = theta[layer] - coeffMat.elementMultiply(grad[layer]);
+		}
+		float currentCost = cost(x, y, theta, tags, lambda, m, numLayers);
+		std::cout << "Current cost: " << currentCost << std::endl;
+	} while (checkConvergence(pastTheta, theta, numLayers, CONVERGENCE_LIMIT));
+
+	return theta;
+}

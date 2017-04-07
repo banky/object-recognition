@@ -18,17 +18,41 @@ int main() {
 
     CSVRow row;
 
-    tbt arr = std::vector< std::vector<float> > (2, std::vector<float>(2, 3));
+    
+    unsigned numLayers = 2;
+    static const unsigned arr[] = {1, 5, 5};
+	std::vector<unsigned> numel (arr, arr + sizeof(arr) / sizeof(arr[0]) );
 
-    Matrix x(arr, 2, 2);
-    Matrix y(2, 2, 1);
-    Matrix z = x*y;//x.multiply(y);//x*y;
+    std::vector<Matrix> theta = randomInit(numLayers, numel);
 
-    //x.print();
-    //y.print();
-    z.print();
-    z = z.transpose();
-    z.print();
+    Matrix x = Matrix(0, 5, 1);
+    x.data[0][0] = 0;
+    x.data[1][0] = 1;
+    x.data[2][0] = 2;
+    x.data[3][0] = 3;
+    x.data[4][0] = 4;
+
+    Matrix y = Matrix(0, 5, 1);
+	y.data[0][0] = 0;
+    y.data[1][0] = 2;
+    y.data[2][0] = 4;
+    y.data[3][0] = 6;
+    y.data[4][0] = 8;
+
+    Matrix tags = Matrix(0, 5, 1);
+	tags.data[0][0] = 0;
+    tags.data[1][0] = 2;
+    tags.data[2][0] = 4;
+    tags.data[3][0] = 6;
+    tags.data[4][0] = 8;
+
+// gradientDescent(std::vector<Matrix> theta, unsigned m, unsigned numLayers, 
+// 	float alpha, Matrix x, Matrix y, Matrix tags, float lambda)
+    
+    theta = gradientDescent(theta, 5, 2, 0.1, x, y, tags, 0);
+}
+
+	//tbt arr = std::vector< std::vector<float> > (2, std::vector<float>(2, 3));
     //downloadImage("https://c1.staticflickr.com/5/4129/5215831864_46f356962f_o.jpg");
     
     // Get rid of the first row
@@ -50,4 +74,3 @@ int main() {
 
     //     //cout << "4th Element(" << row[2] << ")\n";
     // } 
-}

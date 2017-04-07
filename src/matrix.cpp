@@ -81,6 +81,7 @@ Matrix Matrix::elementMultiply(Matrix b) {
 		}
 	} else {
 		cout << "Element wise multiplication failed. Size mismatch\n";
+		exit(1);
 	}
 
 	return res;
@@ -146,7 +147,7 @@ Matrix Matrix::getRow(unsigned row) {
 	Matrix res(0, 1, this->numCols);
 
 	for (unsigned j = 0; j < this->numCols; j++) {
-		res.data[row][j] = this->data[row][j];
+		res.data[0][j] = this->data[row][j];
 	}
 
 	return res;
@@ -156,7 +157,7 @@ Matrix Matrix::getCol(unsigned col) {
 	Matrix res(0, this->numRows, 1);
 
 	for (unsigned i = 0; i < this->numRows; i++) {
-		res.data[i][col] = this->data[i][col];
+		res.data[i][0] = this->data[i][col];
 	}
 
 	return res;
@@ -189,6 +190,16 @@ float Matrix::toFloat() {
 	}
 }
 
+float Matrix::sum() {
+	float accum = 0;
+	for (unsigned i = 0; i < this->numRows; i++) {
+		for (unsigned j = 0; j < this->numCols; j++) {
+			accum += fabs(this->data[i][j]);
+		}
+	}
+	return accum;
+}
+
 void Matrix::print() {
 	std::cout << "[";
 	for (unsigned i = 0; i < this->numRows; i++) {
@@ -197,7 +208,7 @@ void Matrix::print() {
 		}
 		std::cout << "\n";
 	}
-	std::cout << "]";
+	std::cout << "]\n";
 }
 
 Matrix& Matrix::operator+=(const Matrix& rhs) {
