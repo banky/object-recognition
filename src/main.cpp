@@ -3,6 +3,7 @@
 #include "train.h"
 
 #include <iostream>
+#include <sys/stat.h>
 
 #define WIDTH 100
 #define HEIGHT 100
@@ -12,6 +13,12 @@ std::string TRAINING_FILE = "../data/train/images.csv";
 std::string TEST_FILE = "../data/test/images.csv";
 
 using namespace std;
+
+inline bool fileExists (const std::string& name) {
+  struct stat buffer;   
+  return (stat (name.c_str(), &buffer) == 0); 
+}
+
 int main() {
 
     std::ifstream file(TRAINING_FILE);
@@ -24,26 +31,32 @@ int main() {
 
     while(file >> row)
     {
-    	char filename[50];
-        bool thumbExists = downloadImage(row[10], imageId, "../images", filename);
-        if (!thumbExists) {
-    		if (downloadImage(row[2], imageId, "../images", filename)) {
-                cout << "Thumb missing. Got original \n";
-            } else {
-                cout << "Thumb and original missing \n";
+        if (!fileExists("../images/compressed/" + row[0] + ".jpg")) {
+            char filename[50];
+            bool thumbExists = downloadImage(row[10], row[0], "../images", filename);
+            if (!thumbExists) {
+                if (downloadImage(row[2], row[0], "../images", filename)) {
+                    cout << "Thumb missing. Got original \n";
+                } else {
+                    cout << "Thumb and original missing \n";
+                    cout << "Thumb link: " << row[10] << endl;
+                    cout << "Orig link: " << row[2] << endl;
+                    continue;
+                }
+            }
+
+            // Resample image to a smaller size
+            cv::Mat destImage;
+            if (!resampleImage(filename, WIDTH, HEIGHT, destImage)) {
+                cout << "File no longer exists\n";
+                remove(filename);
                 continue;
             }
-    	}
 
-    	// Resample image to a smaller size
-    	cv::Mat destImage;
-    	if (!resampleImage(filename, WIDTH, HEIGHT, destImage)) {
-            cout << "File no longer exists\n";
-            continue;
+            saveImage(destImage, row[0]);
+            remove(filename);
         }
-
-    	saveImage(destImage, imageId);
-    	remove(filename);
+    	
 
     	imageId++;
     	cout << imageId << endl;
