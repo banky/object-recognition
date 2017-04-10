@@ -3,20 +3,20 @@
 /*
  * Downloads an image specified by the url to a file
  */
-char * downloadImage(std::string url, unsigned id, std::string path) {
+bool downloadImage(std::string url, unsigned id, std::string path, char * filename) {
 	CURL *image; 
 	CURLcode imgResult; 
-	FILE *fp = NULL; 
-    char * filename = NULL;
+	FILE *fp = NULL;
 
 	image = curl_easy_init(); 
 	if(image) {
-	    sprintf(filename, "../%s/img%u.jpg", path.c_str(), id);
+	    sprintf(filename, "%s/img%u.jpg", path.c_str(), id);
+
 	    fp = fopen(filename, "w"); 
 	    if(fp == NULL) {
 	    	std::cout << "File cannot be opened\n";
 	    }
-
+	    
 	    //cUrl setup
 	    curl_easy_setopt(image, CURLOPT_URL, url.c_str()); 
 	    curl_easy_setopt(image, CURLOPT_WRITEFUNCTION, NULL); 
@@ -26,8 +26,10 @@ char * downloadImage(std::string url, unsigned id, std::string path) {
         imgResult = curl_easy_perform(image); 
 	    if(imgResult){ 
 	        std::cout << "Cannot grab the image! Error code : " << imgResult << "\n"; 
+	        return false;
 	    }
 	}
+	
 
 	// Clean up the resources 
 	curl_easy_cleanup(image); 
@@ -35,8 +37,7 @@ char * downloadImage(std::string url, unsigned id, std::string path) {
 	if (fp) {
 		fclose(fp);
 	}
-
-    return filename;
+	return true;
 }
 
 /*
@@ -49,10 +50,8 @@ bool resampleImage(std::string filename, unsigned w, unsigned h, cv::Mat & destI
 		std::cout << "Could not open the image file\n";
 		return false;
 	}
-
 	cv::Size size(w,h);
 	cv::resize(srcImage, destImage, size);
-	
     return true;
 }
 
@@ -63,4 +62,23 @@ void displayImage(cv::Mat img) {
 	cv::namedWindow("Display window", cv::WINDOW_AUTOSIZE);
     cv::imshow("Display window", img);
     cv::waitKey(0);
+}
+
+bool saveImage(cv::Mat img, unsigned id) {
+	std::vector<int> compression_params;
+    compression_params.push_back(CV_IMWRITE_JPEG_QUALITY);
+    compression_params.push_back(50);
+    char filename[50];
+
+    sprintf(filename, "../images/compressed/img%u.jpg", id);
+
+	try {
+        imwrite(filename, img, compression_params);
+    }
+    catch (std::runtime_error& ex) {
+        fprintf(stderr, "Exception converting image to PNG format: %s\n", ex.what());
+        return false;
+    }
+
+    return true;
 }

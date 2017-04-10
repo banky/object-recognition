@@ -3,7 +3,7 @@
 #include <math.h>
 #include <stdio.h>
 
-typedef std::vector< std::vector<float> > tbt; // Two dimensional matrix
+typedef std::vector< std::vector<double> > tbt; // Two dimensional matrix
 
 class Matrix {
 	public:
@@ -15,7 +15,7 @@ class Matrix {
 		Matrix();
 		Matrix(unsigned rowIdx, unsigned colIdx, unsigned numRows, unsigned numCols);
 		Matrix(tbt values, unsigned numRows_, unsigned numCols_);
-		Matrix(float value, unsigned numRows_, unsigned numCols_);
+		Matrix(double value, unsigned numRows_, unsigned numCols_);
 
 		// Methods
 		Matrix multiply(Matrix b);
@@ -31,8 +31,8 @@ class Matrix {
 		Matrix getCol(unsigned col);
 		Matrix compare(Matrix b);
 
-		float sum();
-		float toFloat();
+		double sum();
+		double toFloat();
 		void print();
 		
 		// Operators

@@ -31,3 +31,5 @@
 # Data files
 *.csv
 *.jpg
+
+*.dSYM

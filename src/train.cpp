@@ -9,7 +9,7 @@ using namespace std;
 Matrix sigmoid(Matrix a) {
 	for (unsigned i = 0; i < a.numRows; i++) {
 		for (unsigned j = 0; j < a.numCols; j++) {
-			a.data[i][j] = 1/(1 + exp(a.data[i][j]));
+			a.data[i][j] = 1/(1 + exp(-a.data[i][j]));
 		}
 	}
 	return a;
@@ -19,12 +19,7 @@ Matrix sigmoidGradient(Matrix a) {
 	Matrix ones(1, a.numRows, a.numCols);
 	Matrix rhs = ones - sigmoid(a);
 	Matrix lhs = sigmoid(a);
-
-	for (unsigned i = 0; i < a.numRows; i++) {
-		for (unsigned j = 0; j < a.numCols; j++) {
-			a.data[i][j] = lhs.data[i][j] * rhs.data[i][j];
-		}
-	}
+	a = lhs.elementMultiply(rhs);
 
 	return a;
 }
@@ -59,16 +54,16 @@ std::vector<Matrix> forwardProp(Matrix x, std::vector<Matrix> theta,
 }
 
 std::vector<Matrix> backProp(unsigned numLayers, unsigned m, Matrix x,
-	std::vector<Matrix> theta, Matrix y, Matrix tags, float lambda) {
+	std::vector<Matrix> theta, Matrix y, Matrix tags, double lambda) {
 
 	std::vector<Matrix> Del (numLayers);
 	std::vector<Matrix> a (numLayers + 1);	// Add 1 to include training example layer
 	std::vector<Matrix> thetaGrad (numLayers);
 	unsigned numOutNodes = tags.numRows;
 
-	// Initialize thetaGrad to zeroes
+	// Initialize Del to zeroes
 	for (unsigned i = 0; i < numLayers; i++) {
-		thetaGrad[i] = Matrix(0, theta[i].numRows, theta[i].numCols);
+		Del[i] = Matrix(0, theta[i].numRows, theta[i].numCols);
 	}
 
 	for (unsigned i = 0; i < m; i++) {
@@ -86,16 +81,15 @@ std::vector<Matrix> backProp(unsigned numLayers, unsigned m, Matrix x,
 			Matrix z = theta[layer]*(a[layer].addOnesRow());
 			diff[layer] = theta[layer+1].transpose()*diff[layer+1];
 			diff[layer] = diff[layer].elementMultiply(sigmoidGradient(z).addOnesRow());
+			diff[layer].removeRow(0);
 		}
-			
-		for (unsigned layer = 0; layer < numLayers - 1; layer++) {
-			Del[layer] += a[layer]*(diff[layer].transpose());
+		
+		for (unsigned layer = 0; layer < numLayers; layer++) {
+			Del[layer] += (diff[layer])*(a[layer].addOnesRow().transpose());
 		}
 	}
 
-	cout << "Hit 10\n";
-
-	for (unsigned layer = 0; layer < numLayers - 1; layer++) {
+	for (unsigned layer = 0; layer < numLayers; layer++) {
 		unsigned thetaNumRows = theta[layer].numRows;
 		unsigned thetaNumCols = theta[layer].numCols;
 		thetaGrad[layer] = Matrix(0, thetaNumRows, thetaNumCols);
@@ -103,49 +97,81 @@ std::vector<Matrix> backProp(unsigned numLayers, unsigned m, Matrix x,
  		for (unsigned i = 0; i < thetaNumRows; i++) {
 			for (unsigned j = 0; j < thetaNumCols; j++) {
 				if (j == 0) {
-					std::cout << "Hit 11\n";
-					Del[0].print();
-					Del[1].print();
 					thetaGrad[layer].data[i][j] = (Del[layer].data[i][j])/m;
 				} else {
-					std::cout << "Hit 12\n";
 					thetaGrad[layer].data[i][j] = (Del[layer].data[i][j])/m;
 					thetaGrad[layer].data[i][j] += lambda * theta[layer].data[i][j];
 				}
-				std::cout << "Hit 13\n";
 			}
 		}
 	}
 
+	// thetaGrad[0].print();
+	// thetaGrad[1].print();
+
 	return thetaGrad;
 }
 
-float cost(Matrix x, Matrix y, std::vector<Matrix> theta, Matrix tags, 
-	float lambda, unsigned m, unsigned numLayers) {
+std::vector<Matrix> gradientCheck(std::vector<Matrix> theta, double e, unsigned numLayers,
+	Matrix x, Matrix y, Matrix tags, double lambda, unsigned m) {
+	// Initialize thetaGrad vector
+	std::vector<Matrix> thetaGrad (numLayers);
+	for (unsigned i = 0; i < numLayers; i++) {
+		thetaGrad[i] = Matrix(0, theta[i].numRows, theta[i].numCols);
+	}
 
-	float cost = 0;
+	for (unsigned layer = 0; layer < numLayers; layer++) {
+		for (unsigned i = 0; i < theta[layer].numRows; i++) {
+			for (unsigned j = 0; j < theta[layer].numCols; j++) {
+				std::vector<Matrix> rTheta = theta;
+				std::vector<Matrix> lTheta = theta;
+
+				rTheta[layer].data[i][j] += e;
+				lTheta[layer].data[i][j] -= e;
+
+				double rCost = cost(x, y, rTheta, tags, lambda, 
+					m, numLayers);
+				double lCost = cost(x, y, lTheta, tags, lambda,
+					m, numLayers);
+
+				thetaGrad[layer].data[i][j] = (rCost - lCost)/(2 * e);
+			}
+		}
+	}
+
+	// thetaGrad[0].print();
+	// thetaGrad[1].print();
+	
+	return thetaGrad;
+}
+
+double cost(Matrix x, Matrix y, std::vector<Matrix> theta, Matrix tags, 
+	double lambda, unsigned m, unsigned numLayers) {
+
+	double cost = 0;
 	unsigned numOutNodes = tags.numRows;
 	Matrix ones(1, numOutNodes, 1);
 
 	// Cost
 	for (unsigned i = 0; i < m; i++) {
 		Matrix input = x.getRow(i).transpose();
-		
+
 		std::vector<Matrix> a = forwardProp(input, theta, numLayers);
-		Matrix h = a[numLayers - 1];
+		Matrix h = a[numLayers];
+
 		Matrix currY = Matrix(y.data[i][0], numOutNodes, 1);
 		currY = currY.compare(tags);
-		
+
 		//currY is a matrix of 1's and 0's
 		Matrix cost1 = currY.transpose()*mLog(h);
 		Matrix cost0 = (ones - currY).transpose()*mLog(ones - h);
 
-		float cost = cost1.data[0][0] + cost0.data[0][0];
-
-		cost = cost * (-1/m);
+		cost += cost1.data[0][0] + cost0.data[0][0];
 	}
 
-	float reg = 0;
+	cost *= (-1/(double)m);
+
+	double reg = 0;
 
 	// Regularization
 	for (unsigned layer = 0; layer < numLayers; layer++) {
@@ -156,7 +182,7 @@ float cost(Matrix x, Matrix y, std::vector<Matrix> theta, Matrix tags,
 		}
 	}
 
-	reg *= (lambda/(2*m));
+	reg *= (double)(lambda/(2*(double)m));
 	cost += reg;
 
 	return cost;
@@ -181,7 +207,8 @@ std::vector<Matrix> randomInit(unsigned numLayers, std::vector<unsigned> numel) 
 		theta[layer] = Matrix(0, numRows, numCols);
 		for (unsigned i = 0; i < numRows; i++) {
 			for (unsigned j = 0; j < numCols; j++) {
-				theta[layer].data[i][j] = (2 * e * (float)rand())/RAND_MAX - e;
+				theta[layer].data[i][j] = (2 * e * (double)rand())/RAND_MAX - e;
+				//theta[layer].data[i][j] = (float)(i + 1)/float(numRows);
 			}
 		}
 	}
@@ -190,7 +217,7 @@ std::vector<Matrix> randomInit(unsigned numLayers, std::vector<unsigned> numel) 
 }
 
 bool checkConvergence(std::vector<Matrix> a, std::vector<Matrix> b, unsigned numLayers, 
-	float limit) {
+	double limit) {
 	for (unsigned layer = 0; layer < numLayers; layer++) {
 		if (fabs(a[layer].sum() - b[layer].sum()) >= limit) {
 			return false;
@@ -200,23 +227,26 @@ bool checkConvergence(std::vector<Matrix> a, std::vector<Matrix> b, unsigned num
 }
 
 std::vector<Matrix> gradientDescent(std::vector<Matrix> theta, unsigned m, unsigned numLayers, 
-	float alpha, Matrix x, Matrix y, Matrix tags, float lambda) {
+	double alpha, Matrix x, Matrix y, Matrix tags, double lambda) {
 
 	std::vector<Matrix> pastTheta = theta;
+	unsigned i = 0;
+
 	do {
-		std::cout << "Hit 1\n";
 		std::vector<Matrix> grad = backProp(numLayers, m, x, theta, y, tags, lambda);
+		// std::vector<Matrix> grad2 = gradientCheck(theta, 0.00001, numLayers,
+		// 	x, y, tags, lambda, m);
 		pastTheta = theta;
-		std::cout << "Hit 2\n";
 
 		for (unsigned layer = 0; layer < numLayers; layer++) {
-			float coeff = alpha/m;
+			double coeff = alpha/m;
 			Matrix coeffMat = Matrix(coeff, theta[layer].numRows, theta[layer].numCols);
 			theta[layer] = theta[layer] - coeffMat.elementMultiply(grad[layer]);
 		}
-		float currentCost = cost(x, y, theta, tags, lambda, m, numLayers);
-		std::cout << "Current cost: " << currentCost << std::endl;
-	} while (checkConvergence(pastTheta, theta, numLayers, CONVERGENCE_LIMIT));
-
+		//double currentCost = cost(x, y, theta, tags, lambda, m, numLayers);
+		//std::cout << "Current cost: " << currentCost << std::endl;
+		i++;
+	//} while (checkConvergence(pastTheta, theta, numLayers, CONVERGENCE_LIMIT));
+	} while(i < 40000);
 	return theta;
 }

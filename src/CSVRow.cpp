@@ -1,4 +1,5 @@
 #include "CSVRow.h"
+#include <iostream>
 
 std::string const& CSVRow::operator[](std::size_t index) const
 {
@@ -21,6 +22,13 @@ void CSVRow::readNextRow(std::istream& str)
     m_data.clear();
     while(std::getline(lineStream, cell, ','))
     {
+        // Account for comma in quotes
+        if (std::count(cell.begin(), cell.end(), '\"') == 1) {
+            std::string tmp;
+            std::getline(lineStream, tmp, ',');
+            cell += tmp;
+        }
+
         m_data.push_back(cell);
     }
     // This checks for a trailing comma with no data after it.

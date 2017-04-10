@@ -6,8 +6,8 @@ Matrix::Matrix() {
 	this->numRows = 0;
 	this->numCols = 0;
 
-	this->data = std::vector< std::vector<float> > (0, 
-				std::vector<float>(0, 0));
+	this->data = std::vector< std::vector<double> > (0, 
+				std::vector<double>(0, 0));
 }
 
 Matrix::Matrix(unsigned rowIdx, unsigned colIdx, unsigned numRows_, 
@@ -16,18 +16,18 @@ Matrix::Matrix(unsigned rowIdx, unsigned colIdx, unsigned numRows_,
 	this->numRows = numRows_;
 	this->numCols = numCols_;
 	this->data = 
-		vector< vector<float> > (numRows_, vector<float>(numCols_, 0));
+		vector< vector<double> > (numRows_, vector<double>(numCols_, 0));
 
 	this->data[rowIdx][colIdx] = 1;
 }
 
 
-Matrix::Matrix(float value, unsigned numRows_, unsigned numCols_) {
+Matrix::Matrix(double value, unsigned numRows_, unsigned numCols_) {
 	this->numRows = numRows_;
 	this->numCols = numCols_;
 
 	this->data = 
-		vector< vector<float> > (numRows_, vector<float>(numCols_));
+		vector< vector<double> > (numRows_, vector<double>(numCols_));
 
 	for (unsigned i = 0; i < numRows_; i++) {
 		for (unsigned j = 0; j < numCols_; j++) {
@@ -41,7 +41,7 @@ Matrix::Matrix(tbt values, unsigned numRows_, unsigned numCols_) {
 	this->numCols = numCols_;
 
 	this->data = 
-		vector< vector<float> > (numRows_, vector<float>(numCols_));
+		vector< vector<double> > (numRows_, vector<double>(numCols_));
 
 	for (unsigned i = 0; i < numRows_; i++) {
 		for (unsigned j = 0; j < numCols_; j++) {
@@ -58,7 +58,7 @@ Matrix Matrix::multiply(Matrix b) {
 		for (unsigned i = 0; i < this->numRows; i++) {
 			for (unsigned j = 0; j < b.numCols; j++) {
 				for (unsigned k = 0; k < this->numCols; k++) {
-					res.data[i][j] = this->data[i][k]*b.data[k][j];
+					res.data[i][j] += this->data[i][k]*b.data[k][j];
 				}
 			}
 		}
@@ -181,17 +181,17 @@ Matrix Matrix::compare(Matrix b) {
 
 }
 
-float Matrix::toFloat() {
+double Matrix::toFloat() {
 	if (this->numRows == 1 && this->numCols == 1) {
 		return this->data[0][0];
 	} else {
-		cout << "Cannot convert multidimensional matrix to float";
+		cout << "Cannot convert multidimensional matrix to double";
 		exit(1);
 	}
 }
 
-float Matrix::sum() {
-	float accum = 0;
+double Matrix::sum() {
+	double accum = 0;
 	for (unsigned i = 0; i < this->numRows; i++) {
 		for (unsigned j = 0; j < this->numCols; j++) {
 			accum += fabs(this->data[i][j]);
@@ -220,6 +220,10 @@ Matrix& Matrix::operator+=(const Matrix& rhs) {
 		}
 	} else {
 		std::cout << "Matrix addition failed. Size mismatch\n";
+		std::cout << "LHS numRows: " << this->numRows << "\n";
+		std::cout << "RHS numRows: " << rhs.numRows << "\n";
+		std::cout << "LHS numCols: " << this->numCols << "\n";
+		std::cout << "RHS numCols: " << rhs.numCols << "\n";
 		exit(1);
 	}
 
