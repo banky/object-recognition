@@ -1,30 +1,40 @@
 #include "train.h"
+#include <Eigen/Dense>
+#include <Eigen/Core>
 
 #define CONVERGENCE_LIMIT 0.1
 
 using namespace std;
+using namespace Eigen;
+
+double sigmoid(double x) {
+	return 1/(1 + exp(-x));
+}
+
 /*
  * Computes the sigmoid for a given matrix
  */
-Matrix sigmoid(Matrix a) {
+MatrixXd sigmoid(MatrixXd a) {
 	for (unsigned i = 0; i < a.numRows; i++) {
 		for (unsigned j = 0; j < a.numCols; j++) {
-			a.data[i][j] = 1/(1 + exp(-a.data[i][j]));
+			a(i, j) = 1/(1 + exp(-a(i, j));
 		}
 	}
 	return a;
 }
 
-Matrix sigmoidGradient(Matrix a) {
-	Matrix ones(1, a.numRows, a.numCols);
-	Matrix rhs = ones - sigmoid(a);
-	Matrix lhs = sigmoid(a);
-	a = lhs.elementMultiply(rhs);
+MatrixXd sigmoidGradient(MatrixXd a) {
+	// Matrix ones(1, a.numRows, a.numCols);
+	// Matrix rhs = ones - sigmoid(a);
+	// Matrix lhs = sigmoid(a);
+	// a = lhs.elementMultiply(rhs);
+
+	a = (1 - sigmoid(a).array()) * sigmoid(a).array();
 
 	return a;
 }
 
-Matrix mLog(Matrix a) {
+MatrixXd mLog(MatrixXd a) {
 	for (unsigned i = 0; i < a.numRows; i++) {
 		for (unsigned j = 0; j < a.numCols; j++) {
 			a.data[i][j] = log(a.data[i][j]);

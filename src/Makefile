@@ -1,7 +1,7 @@
 OBJS = CSVRow.o ImageUtils.o train.o matrix.o main.o
 CC = g++
 DEBUG = -g
-CFLAGS = -Wall -c $(DEBUG)
+CFLAGS = -Wall -c $(DEBUG) -I ../libs/eigen
 LIBS = -lcurl `pkg-config --cflags --libs opencv`
 LFLAGS = -Wall $(DEBUG) $(LIBS)
 
