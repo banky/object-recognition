@@ -10,3 +10,4 @@ bool resampleImage(std::string filename, unsigned w, unsigned h, cv::Mat & destI
 void displayImage(cv::Mat img);
 bool saveImage(cv::Mat img, std::string id);
 std::vector<std::vector<float> > matToVector(cv::Mat img);
+cv::Mat getImage(std::string filename);

@@ -7,6 +7,7 @@ bool downloadImage(std::string url, std::string id, std::string path, char * fil
 	CURL *image; 
 	CURLcode imgResult; 
 	FILE *fp = NULL;
+	bool success = true;
 
 	image = curl_easy_init(); 
 	if(image) {
@@ -26,7 +27,7 @@ bool downloadImage(std::string url, std::string id, std::string path, char * fil
         imgResult = curl_easy_perform(image); 
 	    if(imgResult){ 
 	        std::cout << "Cannot grab the image! Error code : " << imgResult << "\n"; 
-	        return false;
+	        success = false;
 	    }
 	}
 	
@@ -37,7 +38,7 @@ bool downloadImage(std::string url, std::string id, std::string path, char * fil
 	if (fp) {
 		fclose(fp);
 	}
-	return true;
+	return success;
 }
 
 /*
@@ -59,7 +60,7 @@ bool resampleImage(std::string filename, unsigned w, unsigned h, cv::Mat & destI
  * Displays image specified by Mat object
  */
 void displayImage(cv::Mat img) {
-	cv::namedWindow("Display window", cv::WINDOW_AUTOSIZE);
+    cv::namedWindow("Display window", cv::WINDOW_AUTOSIZE);
     cv::imshow("Display window", img);
     cv::waitKey(0);
 }
@@ -67,7 +68,7 @@ void displayImage(cv::Mat img) {
 bool saveImage(cv::Mat img, std::string id) {
 	std::vector<int> compression_params;
     compression_params.push_back(CV_IMWRITE_JPEG_QUALITY);
-    compression_params.push_back(50);
+    compression_params.push_back(80);
     char filename[50];
 
     sprintf(filename, "../images/compressed/%s.jpg", id.c_str());
@@ -81,4 +82,9 @@ bool saveImage(cv::Mat img, std::string id) {
     }
 
     return true;
+}
+
+cv::Mat getImage(std::string filename) {
+    cv::Mat srcImage = cv::imread(filename, cv::IMREAD_COLOR);
+    return srcImage;
 }

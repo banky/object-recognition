@@ -75,8 +75,8 @@ std::vector<Matrix> backProp(unsigned numLayers, unsigned m, Matrix x,
 		currY = currY.compare(tags);
 
 		std::vector<Matrix> diff(numLayers);
-		diff[numLayers - 1] = a[numLayers] - currY;
 
+		diff[numLayers - 1] = a[numLayers] - currY;
 		for (int layer = numLayers - 2; layer >= 0; layer--) {
 			Matrix z = theta[layer]*(a[layer].addOnesRow());
 			diff[layer] = theta[layer+1].transpose()*diff[layer+1];
@@ -233,20 +233,25 @@ std::vector<Matrix> gradientDescent(std::vector<Matrix> theta, unsigned m, unsig
 	unsigned i = 0;
 
 	do {
+		cout << "Starting back prop \n";
 		std::vector<Matrix> grad = backProp(numLayers, m, x, theta, y, tags, lambda);
+		cout << "Done back prop\n";
 		// std::vector<Matrix> grad2 = gradientCheck(theta, 0.00001, numLayers,
 		// 	x, y, tags, lambda, m);
 		pastTheta = theta;
 
+		cout << "Computing new theta\n";
 		for (unsigned layer = 0; layer < numLayers; layer++) {
 			double coeff = alpha/m;
 			Matrix coeffMat = Matrix(coeff, theta[layer].numRows, theta[layer].numCols);
 			theta[layer] = theta[layer] - coeffMat.elementMultiply(grad[layer]);
 		}
-		//double currentCost = cost(x, y, theta, tags, lambda, m, numLayers);
-		//std::cout << "Current cost: " << currentCost << std::endl;
+		cout << "Computing cost\n";
+		double currentCost = cost(x, y, theta, tags, lambda, m, numLayers);
+		std::cout << "Current cost: " << currentCost << std::endl;
 		i++;
+		cout << "Done\n";
 	//} while (checkConvergence(pastTheta, theta, numLayers, CONVERGENCE_LIMIT));
-	} while(i < 40000);
+	} while(i < 2);
 	return theta;
 }
