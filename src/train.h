@@ -1,22 +1,26 @@
 #include <math.h>
-#include "matrix.h"
+#include <vector>
+#include <Eigen/Core>
+#include <Eigen/Dense>
+//#include "matrix.h"
+#include <iostream>
 #include <time.h>
 #include <stdlib.h>
 #include <stdio.h>
 
-Matrix sigmoid(Matrix a);
-Matrix sigmoidGradient(Matrix a);
-Matrix mLog(Matrix a);
-std::vector<Matrix> forwardProp(Matrix x, std::vector<Matrix> theta,
+double sigmoid(double x);
+double sigmoidGradient(double x);
+double mLog(double x);
+void removeRow(Eigen::MatrixXd& matrix, unsigned rowToRemove);
+Eigen::MatrixXd appendOnes(Eigen::MatrixXd a);
+std::vector<Eigen::MatrixXd> forwardProp(Eigen::MatrixXd x, std::vector<Eigen::MatrixXd> theta,
 	unsigned numLayers);
-std::vector<Matrix> backProp(unsigned numLayers, unsigned m, Matrix x,
-	std::vector<Matrix> theta, Matrix y, Matrix tags, double lambda);
-double cost(Matrix x, Matrix y, std::vector<Matrix> theta, Matrix tags, 
+std::vector<Eigen::MatrixXd> backProp(unsigned numLayers, unsigned m, Eigen::MatrixXd x,
+	std::vector<Eigen::MatrixXd> theta, Eigen::MatrixXd y, Eigen::MatrixXd tags, double lambda);
+std::vector<Eigen::MatrixXd> gradientCheck(std::vector<Eigen::MatrixXd> theta, double e, unsigned numLayers,
+	Eigen::MatrixXd x, Eigen::MatrixXd y, Eigen::MatrixXd tags, double lambda, unsigned m);
+double cost(Eigen::MatrixXd x, Eigen::MatrixXd y, std::vector<Eigen::MatrixXd> theta, Eigen::MatrixXd tags, 
 	double lambda, unsigned m, unsigned numLayers);
-std::vector<Matrix> randomInit(unsigned numLayers, std::vector<unsigned> numel);
-bool checkConvergence(std::vector<Matrix> a, std::vector<Matrix> b, unsigned numLayers, 
-	double limit);
-std::vector<Matrix> gradientDescent(std::vector<Matrix> theta, unsigned m, unsigned numLayers, 
-	double alpha, Matrix x, Matrix y, Matrix tags, double lambda);
-std::vector<Matrix> gradientCheck(std::vector<Matrix> theta, double e, unsigned numLayers,
-	Matrix x, Matrix y, Matrix tags, double lambda, unsigned m);
+std::vector<Eigen::MatrixXd> randomInit(unsigned numLayers, std::vector<unsigned> numel);
+std::vector<Eigen::MatrixXd> gradientDescent(std::vector<Eigen::MatrixXd> theta, unsigned m, unsigned numLayers, 
+	double alpha, Eigen::MatrixXd x, Eigen::MatrixXd y, Eigen::MatrixXd tags, double lambda);
